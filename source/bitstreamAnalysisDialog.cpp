@@ -74,10 +74,10 @@ bitstreamAnalysisDialog::bitstreamAnalysisDialog(QWidget *parent, QString fileNa
 
   compressedFilePath = fileName;
 
-  connect(parser.get(), &parserBase::nalModelUpdated, this, &bitstreamAnalysisDialog::updateParserItemModel);
-  connect(parser.get(), &parserBase::segmentBitrateListUpdated, this, &bitstreamAnalysisDialog::updateBitrateDisplay);
-  connect(parser.get(), &parserBase::streamInfoTextUpdated, this, &bitstreamAnalysisDialog::updateStreamInfoText);
-  connect(parser.get(), &parserBase::backgroundParsingDone, this, &bitstreamAnalysisDialog::backgroundParsingDone);
+  connect(parser.data(), &parserBase::nalModelUpdated, this, &bitstreamAnalysisDialog::updateParserItemModel);
+  connect(parser.data(), &parserBase::segmentBitrateListUpdated, this, &bitstreamAnalysisDialog::updateBitrateDisplay);
+  connect(parser.data(), &parserBase::streamInfoTextUpdated, this, &bitstreamAnalysisDialog::updateStreamInfoText);
+  connect(parser.data(), &parserBase::backgroundParsingDone, this, &bitstreamAnalysisDialog::backgroundParsingDone);
   
   connect(ui.showVideoStreamOnlyCheckBox, &QCheckBox::toggled, this, &bitstreamAnalysisDialog::showVideoStreamOnlyCheckBoxToggled);
   connect(ui.colorCodeStreamsCheckBox, &QCheckBox::toggled, this, &bitstreamAnalysisDialog::colorCodeStreamsCheckBoxToggled);
