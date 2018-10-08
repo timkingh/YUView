@@ -25,7 +25,7 @@ before_install:
 install:
   - if [ "$TRAVIS_OS_NAME" = "osx" ]; then brew install qt5; fi
   - if [ "$TRAVIS_OS_NAME" = "osx" ]; then brew link --force qt5; fi
-  - if [ "$TRAVIS_OS_NAME" = "linux" ]; then sudo apt-get install -qq qt510base qt510charts-no-lgpl; source /opt/qt511/bin/qt511-env.sh; fi
+  - if [ "$TRAVIS_OS_NAME" = "linux" ]; then sudo apt-get install -qq qt510base qt510charts-no-lgpl; source /opt/qt510/bin/qt510-env.sh; fi
   # On linux, install the new g++ version
   - if [ "$TRAVIS_OS_NAME" = "linux" ]; then sudo apt-get install -qq g++-8; fi
   - if [ "$TRAVIS_OS_NAME" = "linux" ]; then sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-8 90; fi
