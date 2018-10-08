@@ -52,6 +52,7 @@ public:
 
 private slots:
   void updateParserItemModel(unsigned int nalModelUpdated);
+  void updateBitrateDisplay();
   void updateStreamInfoText();
   void backgroundParsingDone();
   void colorCodeStreamsCheckBoxToggled(bool state) { parser->setStreamColorCoding(state); }
@@ -65,6 +66,12 @@ private:
   QFuture<void> backgroundParserFuture;
   void backgroundParsingFunction();
   QString compressedFilePath;
+
+  // For simplicity and performance we will track how many bitrate segments we already added to the chart
+  unsigned int addedSegments {0};
+  // Track the x and y axis min/max
+  QPair<qint64, qint64> rangeAxisX;
+  QPair<qint64, qint64> rangeAxisY;
 
   // We create the status bar manually because the QtDesigner does not support status bars in dialogs
   QStatusBar *statusBar;

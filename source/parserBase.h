@@ -53,6 +53,22 @@ public:
   void setNewNumberModelItems(unsigned int n) { packetModel->setNewNumberModelItems(n); }
   void enableModel();
 
+  // Streams: If we read a container, one file might have more than one stream
+  virtual unsigned int getNrStreams() { return 1; }
+
+  // The information 
+  class segmentBitrate
+  {
+  public:
+    segmentBitrate() {}
+    segmentBitrate(int64_t startTime) : startTime(startTime) {}
+    uint64_t getDuration() { return (endTime > startTime) ? endTime - startTime : 0; }
+    int64_t startTime {0};
+    int64_t endTime {0};
+    uint64_t bytes {0};
+  };
+  QList<segmentBitrate> getSegmentBitrateList(unsigned int streamIdx) { return segmentBitrateListPerStream[streamIdx]; };
+
   // Get info about the stream in formatted text form
   virtual QString getStreamInfoText() = 0;
 
@@ -69,6 +85,8 @@ public:
 signals:
   // An item was added to the nal model. This is emitted whenever a NAL unit or an AVPacket is parsed.
   void nalModelUpdated(unsigned int newNumberItems);
+  // The information of a segment was added to the segment bitrate list
+  void segmentBitrateListUpdated();
   void backgroundParsingDone();
   // The getStreamInfoText() function will return a new text with more information
   void streamInfoTextUpdated();
@@ -80,6 +98,9 @@ protected:
   // If this variable is set (from an external thread), the parsing process should cancel immediately
   bool cancelBackgroundParser {false};
   int  progressPercentValue   {0};
+
+  // This should be filled by the background runParsingOfFile function
+  QMap<unsigned int, QList<segmentBitrate>> segmentBitrateListPerStream;
 };
 
 #endif // PARSERBASEE_H

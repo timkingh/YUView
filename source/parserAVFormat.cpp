@@ -42,7 +42,7 @@
 
 using namespace parserCommon;
 
-#define PARSERAVCFORMAT_DEBUG_OUTPUT 1
+#define PARSERAVCFORMAT_DEBUG_OUTPUT 0
 #if PARSERAVCFORMAT_DEBUG_OUTPUT && !NDEBUG
 #include <QDebug>
 #define DEBUG_AVFORMAT qDebug
@@ -520,6 +520,10 @@ bool parserAVFormat::runParsingOfFile(QString compressedFilePath)
   AVPacketWrapper packet = ffmpegFile->getNextPacket(false, false);
   int64_t start_ts = packet.get_dts();
 
+  // Keep track of the size of each segment of each stream
+  QMap<int, segmentBitrate> currentSegmentMap;
+  QMap<int, bool> currentSegmentAppendedMap;
+
   int packetID = 0;
   while (!ffmpegFile->atEnd())
   {
@@ -537,15 +541,41 @@ bool parserAVFormat::runParsingOfFile(QString compressedFilePath)
       DEBUG_AVFORMAT("parseAVPacket NAL %d", packetID);
     }
 
+    const unsigned int streamIdx = packet.get_stream_index();
+    if (packet.get_flag_keyframe() && currentSegmentMap[streamIdx].getDuration() != 0)
+    {
+      segmentBitrateListPerStream[streamIdx].append(currentSegmentMap[streamIdx]);
+      currentSegmentMap[streamIdx] = segmentBitrate((uint64_t)packet.get_dts());
+      currentSegmentAppendedMap[streamIdx] = true;
+      emit segmentBitrateListUpdated();
+    }
+    else
+      currentSegmentAppendedMap[streamIdx] = false;
+    currentSegmentMap[streamIdx].bytes += packet.get_data_size();
+    currentSegmentMap[streamIdx].endTime = (uint64_t)packet.get_dts();
+
     packetID++;
     packet = ffmpegFile->getNextPacket(false, false);
     
     // For signal slot debugging purposes, sleep
-    // QThread::msleep(200);
+    // QThread::msleep(20);
     
+    // Emit that the model changed. The bitstream analysis dialog can then update what is shown
     if (!packetModel->isNull())
       emit nalModelUpdated(packetModel->getNumberFirstLevelChildren());
   }
+
+  bool segmentAdded = false;
+  for (int i=0; i<currentSegmentMap.count(); i++)
+  {
+    if (!currentSegmentAppendedMap[i])
+    {
+      segmentBitrateListPerStream[i].append(currentSegmentMap[i]);
+      segmentAdded = true;
+    }
+  }
+  if (segmentAdded)
+    emit segmentBitrateListUpdated();
 
   // Seek back to the beginning of the stream.
   ffmpegFile->seekToDTS(0);
