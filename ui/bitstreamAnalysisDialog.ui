@@ -77,10 +77,31 @@
        </item>
       </layout>
      </widget>
+     <widget class="QWidget" name="tabBitrateOverTime">
+      <attribute name="title">
+       <string>Bitrate Over Time</string>
+      </attribute>
+      <layout class="QVBoxLayout" name="verticalLayout_3">
+       <item>
+        <widget class="QChartView" name="bitrateGraphicsView">
+         <property name="renderHints">
+          <set>QPainter::Antialiasing|QPainter::TextAntialiasing</set>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
     </widget>
    </item>
   </layout>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>QChartView</class>
+   <extends>QGraphicsView</extends>
+   <header>QtCharts</header>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections/>
 </ui>
