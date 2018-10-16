@@ -35,6 +35,7 @@
 
 #include <QAbstractItemModel>
 #include <QString>
+#include <QTreeWidgetItem>
 
 #include "parserCommon.h"
 
@@ -49,7 +50,10 @@ public:
   virtual ~parserBase() = 0;
 
   // Get a pointer to the nal unit model. The model is only filled if you call enableModel() first.
+  //QAbstractItemModel *getPacketItemModel() { return packetModel.data(); }
   QAbstractItemModel *getPacketItemModel() { return packetModel.data(); }
+  QAbstractItemModel *getFilteredPacketItemModel();
+  
   void setNewNumberModelItems(unsigned int n) { packetModel->setNewNumberModelItems(n); }
   void enableModel();
 
@@ -69,8 +73,8 @@ public:
   };
   QList<segmentBitrate> getSegmentBitrateList(unsigned int streamIdx) { return segmentBitrateListPerStream[streamIdx]; };
 
-  // Get info about the stream in formatted text form
-  virtual QString getStreamInfoText() = 0;
+  // Get info about the stream organized in a tree
+  virtual QList<QTreeWidgetItem*> getStreamInfo() = 0;
 
   // For parsing files in the background (threading) in the bitstream analysis dialog:
   virtual bool runParsingOfFile(QString fileName) = 0;
@@ -80,7 +84,6 @@ public:
   virtual int getVideoStreamIndex() { return -1; }
 
   void setStreamColorCoding(bool colorCoding) { packetModel->setUseColorCoding(colorCoding); }
-  void setShowVideoStreamOnly(bool showVideoOnly);
 
 signals:
   // An item was added to the nal model. This is emitted whenever a NAL unit or an AVPacket is parsed.
@@ -88,12 +91,13 @@ signals:
   // The information of a segment was added to the segment bitrate list
   void segmentBitrateListUpdated();
   void backgroundParsingDone();
-  // The getStreamInfoText() function will return a new text with more information
-  void streamInfoTextUpdated();
+  
+  // Signal that the getStreamInfo() function will now return an updated info
+  void streamInfoUpdated();
 
 protected:
   QScopedPointer<parserCommon::PacketItemModel> packetModel;
-  //QScopedPointer<parserCommon::FilterByStreamIndexProxyModel> streamIndexFilter;
+  QScopedPointer<parserCommon::FilterByStreamIndexProxyModel> streamIndexFilter;
 
   // If this variable is set (from an external thread), the parsing process should cancel immediately
   bool cancelBackgroundParser {false};

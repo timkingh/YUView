@@ -74,10 +74,9 @@ bitstreamAnalysisDialog::bitstreamAnalysisDialog(QWidget *parent, QString fileNa
 
   compressedFilePath = fileName;
 
-  connect(parser.data(), &parserBase::nalModelUpdated, this, &bitstreamAnalysisDialog::updateParserItemModel);
-  connect(parser.data(), &parserBase::segmentBitrateListUpdated, this, &bitstreamAnalysisDialog::updateBitrateDisplay);
-  connect(parser.data(), &parserBase::streamInfoTextUpdated, this, &bitstreamAnalysisDialog::updateStreamInfoText);
-  connect(parser.data(), &parserBase::backgroundParsingDone, this, &bitstreamAnalysisDialog::backgroundParsingDone);
+  connect(parser.get(), &parserBase::nalModelUpdated, this, &bitstreamAnalysisDialog::updateParserItemModel);
+  connect(parser.get(), &parserBase::streamInfoUpdated, this, &bitstreamAnalysisDialog::updateStreamInfo);
+  connect(parser.get(), &parserBase::backgroundParsingDone, this, &bitstreamAnalysisDialog::backgroundParsingDone);
   
   connect(ui.showVideoStreamOnlyCheckBox, &QCheckBox::toggled, this, &bitstreamAnalysisDialog::showVideoStreamOnlyCheckBoxToggled);
   connect(ui.colorCodeStreamsCheckBox, &QCheckBox::toggled, this, &bitstreamAnalysisDialog::colorCodeStreamsCheckBoxToggled);
@@ -95,7 +94,7 @@ bitstreamAnalysisDialog::bitstreamAnalysisDialog(QWidget *parent, QString fileNa
   QValueAxis *axisX = new QValueAxis();
   ui.bitrateGraphicsView->chart()->setAxisX(axisX, series);
 
-  updateStreamInfoText();
+  updateStreamInfo();
 }
 
 bitstreamAnalysisDialog::~bitstreamAnalysisDialog()
@@ -115,57 +114,28 @@ void bitstreamAnalysisDialog::updateParserItemModel(unsigned int newNumberItems)
   statusBar->showMessage(QString("Parsing file (%1%)").arg(parser->getParsingProgressPercent()));
 }
 
-void bitstreamAnalysisDialog::updateBitrateDisplay()
+void bitstreamAnalysisDialog::updateStreamInfo()
 {
-  // TODO: All streams
-
-  // Add the new data
-  QList<QAbstractSeries*> seriesList = ui.bitrateGraphicsView->chart()->series();
-  if (seriesList.length() == 0)
-    return;
-
-  unsigned int streamIdx = 0;
-
-  QAbstractSeries *series = seriesList[streamIdx];
-  QLineSeries *lineSeries = dynamic_cast<QLineSeries*>(series);
-  if (!lineSeries)
-    return;
-  
-  QList<parserBase::segmentBitrate> segmentBitrateList = parser->getSegmentBitrateList(streamIdx);
-  
-  for (int i=addedSegments; i<segmentBitrateList.count(); i++)
-  {
-    parserBase::segmentBitrate s = segmentBitrateList.at(i);
-    // Append a line from start to end
-    lineSeries->append(s.startTime, s.bytes);
-    lineSeries->append(s.endTime, s.bytes);
-
-    if (s.startTime < rangeAxisX.first)
-      rangeAxisX.first = s.startTime;
-    if (s.endTime > rangeAxisX.second)
-      rangeAxisX.second = s.endTime;
-    if ((qint64)s.bytes > rangeAxisY.second)
-      rangeAxisY.second = s.bytes;
-
-    DEBUG_ANALYSIS("bitstreamAnalysisDialog::updateBitrateDisplay add horizontal line at y=%d x=(%d,%d)", s.bytes, s.startTime, s.endTime);
-
-    addedSegments++;
-  }
-
-  ui.bitrateGraphicsView->chart()->axisX()->setRange(rangeAxisX.first, rangeAxisX.second);
-  ui.bitrateGraphicsView->chart()->axisY()->setRange(rangeAxisY.first, rangeAxisY.second);
-  DEBUG_ANALYSIS("bitstreamAnalysisDialog::updateBitrateDisplay axis limits (%d, &d) (&d, %d)", rangeAxisX.first, rangeAxisX.second, rangeAxisY.first, rangeAxisY.second);
-  DEBUG_ANALYSIS("bitstreamAnalysisDialog::updateBitrateDisplay new segment count %d", lineSeries->count());
-}
-
-void bitstreamAnalysisDialog::updateStreamInfoText()
-{
-  ui.streamInfoText->document()->setPlainText(parser->getStreamInfoText());
+  ui.streamInfoTreeWidget->clear();
+  ui.streamInfoTreeWidget->addTopLevelItems(parser->getStreamInfo());
+  ui.streamInfoTreeWidget->expandAll();
 }
 
 void bitstreamAnalysisDialog::backgroundParsingDone()
 {
   statusBar->showMessage("Parsing done.");
+}
+
+void bitstreamAnalysisDialog::showVideoStreamOnlyCheckBoxToggled(bool state)
+{
+  if (showVideoStreamOnly != state)
+  {
+    showVideoStreamOnly = state;
+    if (showVideoStreamOnly)
+      ui.dataTreeView->setModel(parser->getFilteredPacketItemModel());
+    else
+      ui.dataTreeView->setModel(parser->getPacketItemModel());
+  }
 }
 
 void bitstreamAnalysisDialog::backgroundParsingFunction()
