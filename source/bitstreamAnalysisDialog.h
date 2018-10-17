@@ -52,6 +52,7 @@ public:
 
 private slots:
   void updateParserItemModel(unsigned int nalModelUpdated);
+  void updateBitrateDisplay();
   void updateStreamInfo();
   void backgroundParsingDone();
   void colorCodeStreamsCheckBoxToggled(bool state) { parser->setStreamColorCoding(state); }
@@ -65,6 +66,13 @@ private:
   QFuture<void> backgroundParserFuture;
   void backgroundParsingFunction();
   QString compressedFilePath;
+
+  // For simplicity and performance we will track how many bitrate segments we already added to the chart
+  QMap<int, int> addedSegmentsPerStream;
+  // Track the x and y axis min/max
+  QPair<qint64, qint64> rangeAxisX;
+  QPair<qint64, qint64> rangeAxisY;
+  bool axisRangeInitialized {false};
 
   bool showVideoStreamOnly {false};
 

@@ -57,6 +57,7 @@ public:
   bool runParsingOfFile(QString compressedFilePath) Q_DECL_OVERRIDE;
 
   int getVideoStreamIndex() Q_DECL_OVERRIDE { return videoStreamIndex; }
+  unsigned int getNrStreams() Q_DECL_OVERRIDE { return streamInfoAllStreams.count() - 1; }
 
 private:
   AVCodecSpecfier codecID;

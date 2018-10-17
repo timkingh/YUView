@@ -543,7 +543,7 @@ bool parserAVFormat::runParsingOfFile(QString compressedFilePath)
   streamInfoAllStreams = ffmpegFile->getFileInfoForAllStreams();
   emit streamInfoUpdated();
 
-  // Now iterate over all packets and send them to the parser
+  // Now iterate over all packets getNumberStreamsand send them to the parser
   AVPacketWrapper packet = ffmpegFile->getNextPacket(false, false);
   int64_t start_ts = packet.get_dts();
 
@@ -569,7 +569,12 @@ bool parserAVFormat::runParsingOfFile(QString compressedFilePath)
     }
 
     const unsigned int streamIdx = packet.get_stream_index();
-    if (packet.get_flag_keyframe() && currentSegmentMap[streamIdx].getDuration() != 0)
+    if (!currentSegmentMap.contains(streamIdx))
+    {
+      // First packet in this stream
+      currentSegmentMap[streamIdx] = segmentBitrate((uint64_t)packet.get_dts());
+    }
+    else if (packet.get_flag_keyframe())
     {
       segmentBitrateListPerStream[streamIdx].append(currentSegmentMap[streamIdx]);
       currentSegmentMap[streamIdx] = segmentBitrate((uint64_t)packet.get_dts());
