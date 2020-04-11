@@ -1672,8 +1672,8 @@ bool AVPixFmtDescriptorWrapper::operator==(const AVPixFmtDescriptorWrapper &othe
     return false;
   if (log2_chroma_h != other.log2_chroma_h)
     return false;
-  if (flags != other.flags)
-    return false;
+  //if (flags != other.flags)
+  //  return false;
 
   for (int i=0; i<nb_components; i++)
   {
